@@ -47,10 +47,16 @@ func AddToStage(filePath string) error {
 	// Remove existing entry if file is already staged
 	newIndex := removeEntry(index, filePath)
 
+	fileType := "normal"
+	if fileInfo.Mode().Perm()&0111 != 0 {
+		fileType = "executable"
+	}
+
 	// Add new entry
 	*newIndex = append(*newIndex, IndexEntry{
 		Path:     filePath,
 		BlobHash: blobHash,
+		Type:     fileType,
 	})
 
 	if err := newIndex.SaveIndex(); err != nil {

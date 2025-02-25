@@ -9,6 +9,7 @@ import (
 type IndexEntry struct {
 	Path     string `json:"path"`     // File path relative to repo root
 	BlobHash string `json:"blobHash"` // SHA-1 hash of the blob
+	Type     string `json:"type"`     // Type of file (executable or regular)
 }
 
 // Index is the staging area (list of entries).

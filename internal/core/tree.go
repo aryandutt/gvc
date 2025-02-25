@@ -41,3 +41,5 @@ func CreateTreeFromIndex() (string, error) {
 
 	return treeHash, nil
 }
+
+// func 

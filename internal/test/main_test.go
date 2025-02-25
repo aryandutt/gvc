@@ -15,4 +15,5 @@ func TestFile(t *testing.T) {
 	mode := info.Mode()
 
 	fmt.Print((mode & 0111) != 0)
+
 }
