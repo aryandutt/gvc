@@ -57,6 +57,10 @@ func createTreeRecursive(parent string, index *Index) ([]TreeEntry, error) {
 		paths := strings.Split(entry.Path, "/")
 		parents := strings.Split(parent, "/")
 
+		if parents[0] == "" {
+			parents = parents[1:]
+		}
+
 		// Remove common prefix
 		for len(parents) > 0 && len(parent) > 0 {
 			if parents[0] == paths[0] {
