@@ -47,9 +47,9 @@ func AddToStage(filePath string) error {
 	// Remove existing entry if file is already staged
 	newIndex := removeEntry(index, filePath)
 
-	fileType := "normal"
+	fileType := "100644"
 	if fileInfo.Mode().Perm()&0111 != 0 {
-		fileType = "executable"
+		fileType = "100755"
 	}
 
 	// Add new entry

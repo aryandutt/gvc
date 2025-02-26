@@ -2,7 +2,6 @@ package test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 )
 
@@ -10,10 +9,8 @@ import (
 func TestFile(t *testing.T) {
 	// Create a test directory
 
-	info, _ := os.Lstat("../../dir/hello.txt")
+	arr := []string{"file1.txt", "file2.txt"}
+	arr = arr[1:]
 
-	mode := info.Mode()
-
-	fmt.Print((mode & 0111) != 0)
-
+	fmt.Print(arr)
 }
