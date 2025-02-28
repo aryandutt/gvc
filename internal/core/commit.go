@@ -11,6 +11,7 @@ import (
 )
 
 type Commit struct {
+	Tree    string
 	Hash    string
 	Author  string
 	Date    time.Time
@@ -40,6 +41,7 @@ func CreateCommit(message, author string) (string, error) {
 		Date:    time.Now(),
 		Message: message,
 		Parent:  parentHash,
+		Tree:   treeHash,
 	}
 
 	// 4. Build commit content
@@ -49,7 +51,7 @@ func CreateCommit(message, author string) (string, error) {
 			"author %s %d +0000\n"+
 			"committer %s %d +0000\n\n"+
 			"%s\n",
-		treeHash,
+		commit.Tree,
 		commit.Parent,
 		commit.Author,
 		commit.Date.Unix(),
@@ -106,7 +108,11 @@ func GetCommit(hash string) (*Commit, error) {
 			// Parse timestamp
 			timestamp, _ := strconv.ParseInt(fields[len(fields)-2], 10, 64)
 			commit.Date = time.Unix(timestamp, 0)
-		} else if line == "" {
+		} else if strings.HasPrefix(line, "tree "){
+			// Example: "tree 7b4d6f3d8e2f6f8d9b6f3f3e8f0e3f0e3f0e3f0"
+			
+			commit.Tree = strings.TrimPrefix(line, "tree ")
+		}else if line == "" {
 			// Commit message starts after the first empty line
 			commit.Message = strings.Join(lines[i+1:], "\n")
 			break
@@ -114,6 +120,38 @@ func GetCommit(hash string) (*Commit, error) {
 	}
 
 	return commit, nil
+}
+
+// Compares the tree hash in HEAD with the tree hash for the index.
+func CompareHeadAndIndex() (bool, error) {
+	// Get tree hash from HEAD
+	headHash, err := getCurrentCommit()
+	if err != nil {
+		return false, fmt.Errorf("getting current commit: %v", err)
+	}
+
+	commit, err := GetCommit(headHash)
+	if err != nil {
+		return false, fmt.Errorf("getting commit: %v", err)
+	}
+
+	// Get tree hash from index
+	indexHash, err := CreateTreeFromIndex()
+	if err != nil {
+		return false, fmt.Errorf("creating tree from index: %v", err)
+	}
+
+	return commit.Tree == indexHash, nil
+
+}
+
+func IsFirstCommit() (bool, error) {
+	headHash, err := getCurrentCommit()
+	if err != nil {
+		return false, fmt.Errorf("getting current commit: %v", err)
+	}
+
+	return headHash == "", nil
 }
 
 // Helper: Get the current commit hash from HEAD

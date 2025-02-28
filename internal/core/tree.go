@@ -12,7 +12,7 @@ type TreeEntry struct {
 	Mode string // e.g., "100644" for files
 	Type string // "blob" or "tree"
 	Hash string // SHA-1 hash of the blob/tree
-	Path string // Filename or directory name
+	Path string // File or directory name
 }
 
 // CreateTreeFromIndex generates a tree object from the staging area (index.json).
@@ -93,7 +93,7 @@ func createTreeRecursive(parent string, index *Index) ([]TreeEntry, error) {
 		var childTrees []TreeEntry
 		var err error
 		if parent == "" {
-			childTrees, err = createTreeRecursive(child, index) // [{0400 tree subdir_hash subdir} {100644 blob file_hash file}]
+			childTrees, err = createTreeRecursive(child, index)
 		} else {
 			childTrees, err = createTreeRecursive(parent+"/"+child, index)
 		}

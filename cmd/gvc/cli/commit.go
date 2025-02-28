@@ -25,12 +25,31 @@ var commitCmd = &cobra.Command{
 			fmt.Println("Error: Commit message required (-m)")
 			return
 		}
-		
+
 		user, err := user.Current()
 
-		if err!=nil {
+		if err != nil {
 			fmt.Println("Error getting user info:", err)
 			return
+		}
+
+		isFirstCommit, err := core.IsFirstCommit()
+
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		if !isFirstCommit {
+			ok, err := core.CompareHeadAndIndex()
+			if err != nil {
+				fmt.Println("Error:", err)
+				return
+			}
+			if ok {
+				fmt.Println("Nothing to commit, working tree clean")
+				return
+			}
 		}
 
 		commitHash, err := core.CreateCommit(message, user.Username)
