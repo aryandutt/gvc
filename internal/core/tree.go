@@ -44,6 +44,19 @@ func CreateTreeFromIndex() (string, error) {
 	return hash, nil
 }
 
+// GetHeadTree returns the hash of the tree object pointed by HEAD commit.
+func GetHeadTree() (string, error) {
+	commitHash, err := getCurrentCommit()
+	if err != nil {
+		return "", err
+	}
+	commit, err := GetCommit(commitHash)
+	if err != nil {
+		return "", err
+	}
+	return commit.Tree, nil
+}
+
 func createTreeRecursive(parent string, index *Index) ([]TreeEntry, error) {
 	var tree []TreeEntry
 

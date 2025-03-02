@@ -47,3 +47,13 @@ func (idx *Index) SaveIndex() error {
 	}
 	return os.WriteFile(indexPath, data, 0644)
 }
+
+// GetEntry returns the index entry for a given path.
+func (idx *Index) GetEntry(path string) (*IndexEntry, bool) {
+	for _, entry := range *idx {
+		if entry.Path == path {
+			return &entry, true
+		}
+	}
+	return nil, false
+}
