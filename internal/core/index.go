@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 )
 
@@ -56,4 +57,39 @@ func (idx *Index) GetEntry(path string) (*IndexEntry, bool) {
 		}
 	}
 	return nil, false
+}
+
+// Returns a list of files that are different between the index and the HEAD commit.
+func (index *Index) CompareToHead() ([]string, error) {
+    headTreeHash, err := GetHeadTree()
+    if err != nil {
+        return nil, fmt.Errorf("failed to get head tree: %v", err)
+    }
+
+    treeFiles, err := GetTreeFiles(headTreeHash)
+    if err != nil {
+        return nil, fmt.Errorf("failed to get tree files: %v", err)
+    }
+
+    var stagedChanges []string
+
+    for _, entry := range *index {
+        headBlob, exists := treeFiles[entry.Path]
+        if !exists {
+            // File in index is not in HEAD → file added
+            stagedChanges = append(stagedChanges, fmt.Sprintf("added: %s", entry.Path))
+        } else if headBlob != entry.BlobHash {
+            // File exists but blob hash is different → file modified
+            stagedChanges = append(stagedChanges, fmt.Sprintf("modified: %s", entry.Path))
+        }
+    }
+
+    // Optionally: check for files in HEAD that are no longer in the index (i.e. deleted files).
+    // for path := range treeFiles {
+    //     if _, exists := index.GetEntry(path); !exists {
+    //         stagedChanges = append(stagedChanges, fmt.Sprintf("deleted: %s", path))
+    //     }
+    // }
+
+    return stagedChanges, nil
 }

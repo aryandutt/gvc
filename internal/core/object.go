@@ -28,5 +28,9 @@ func GetObjectData(objType string, content []byte) (string, []byte) {
   
 	hash := sha1.Sum(data)
 	return hex.EncodeToString(hash[:]), data
+}
 
+func GetObjectContent(hash string) ([]byte, error) {
+	objectPath := filepath.Join(".gvc", "objects", hash[:2], hash[2:])
+	return os.ReadFile(objectPath)
 }

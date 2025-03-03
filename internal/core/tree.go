@@ -3,6 +3,8 @@ package core
 import (
 	"bytes"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 )
@@ -57,6 +59,40 @@ func GetHeadTree() (string, error) {
 	return commit.Tree, nil
 }
 
+func GetTree(hash string) ([]TreeEntry, error) {
+	objectPath := filepath.Join(".gvc", "objects", hash[:2], hash[2:])
+	data, err := os.ReadFile(objectPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read tree %s: %v", hash, err)
+	}
+
+	// Split header and content
+	parts := bytes.SplitN(data, []byte{0}, 2) // Git object format: "type size\0content"
+	if len(parts) != 2 || !strings.HasPrefix(string(parts[0]), "tree") {
+		return nil, fmt.Errorf("invalid tree object: %s", hash)
+	}
+
+	content := string(parts[1])
+	lines := strings.Split(content, "\n")
+
+	tree := []TreeEntry{}
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+		parts := strings.SplitN(line, "\t", 2)
+		meta := strings.Split(parts[0], " ")
+		tree = append(tree, TreeEntry{
+			Mode: meta[0],
+			Type: meta[1],
+			Hash: meta[2],
+			Path: parts[1],
+		})
+	}
+
+	return tree, nil
+}
+
 func createTreeRecursive(parent string, index *Index) ([]TreeEntry, error) {
 	var tree []TreeEntry
 
@@ -80,14 +116,14 @@ func createTreeRecursive(parent string, index *Index) ([]TreeEntry, error) {
 				parents = parents[1:]
 				paths = paths[1:]
 			} else {
-				break;
+				break
 			}
 		}
 
 		// Skip if the entry is not a child of the parent
 		if len(paths) == 1 {
 			if len(parents) != 0 {
-				continue;
+				continue
 			}
 			tree = append(tree, TreeEntry{
 				Mode: entry.Type,
@@ -95,12 +131,12 @@ func createTreeRecursive(parent string, index *Index) ([]TreeEntry, error) {
 				Hash: entry.BlobHash,
 				Path: paths[0],
 			})
-			continue;
+			continue
 		}
 
 		childSet[paths[0]] = member
 	}
-	
+
 	// Recursively create child trees
 	for child := range childSet {
 		var childTrees []TreeEntry
@@ -139,4 +175,33 @@ func ConvertTreeToByte(tree []TreeEntry) ([]byte, error) {
 		treeContent.WriteString(line)
 	}
 	return treeContent.Bytes(), nil
+}
+
+// GetTree returns a map of file paths to their blob hash in a tree object.
+func GetTreeFiles(hash string) (map[string]string, error) {
+	tree, err := GetTree(hash)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tree: %v", err)
+	}
+
+	files := make(map[string]string)
+	for _, entry := range tree {
+		switch entry.Type {
+		case "blob":
+			files[entry.Path] = entry.Hash
+		case "tree":
+			// Recursively get files from the subtree.
+			subFiles, err := GetTreeFiles(entry.Hash)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get tree for %s: %v", entry.Path, err)
+			}
+			// Prepend the directory name to each file path from the sub-tree.
+			for subPath, subHash := range subFiles {
+				fullPath := filepath.Join(entry.Path, subPath)
+				files[fullPath] = subHash
+			}
+		}
+	}
+
+	return files, nil
 }

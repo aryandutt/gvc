@@ -15,20 +15,12 @@ func Status() error {
 		return fmt.Errorf("failed to load index: %v", err)
 	}
 
-	// headTree
-	
-	_, err = GetHeadTree()
-	if err != nil {
-		return fmt.Errorf("failed to get head tree: %v", err)
-	}
-
 	wdMap, err := ScanWorkingDir()
 	if err != nil {
 		return fmt.Errorf("failed to scan working directory: %v", err)
 	}
 
-
-	var _, modifiedFiles, deletedFiles, untrackedFiles []string
+	var modifiedFiles, deletedFiles, untrackedFiles []string
 
 	for _, entry := range *index {
 		currentHash, exists := wdMap[entry.Path]
@@ -48,21 +40,35 @@ func Status() error {
 			untrackedFiles = append(untrackedFiles, path)
 		}
 	}
+	stagedChanges, err := index.CompareToHead()
+	if err != nil {
+		return fmt.Errorf("failed to compare index to HEAD: %v", err)
+	}
 
-	fmt.Println("\nChanges not staged for commit:")
+	green := color.New(color.FgHiGreen).SprintFunc()
+	if len(stagedChanges) > 0 {
+		fmt.Println("\nChanges to be committed:")
+		for _, change := range stagedChanges {
+			fmt.Printf("\t%s\n", green(change))
+		}
+	}
 
 	red := color.New(color.FgHiRed).SprintFunc()
-
-	for _, path := range modifiedFiles {
-		fmt.Printf("\t%s: %s\n", red("modified"), red(path))
+	if len(modifiedFiles) > 0 || len(deletedFiles) > 0 {
+		fmt.Println("\nChanges not staged for commit:")
+		for _, path := range modifiedFiles {
+			fmt.Printf("\t%s: %s\n", red("modified"), red(path))
+		}
+		for _, path := range deletedFiles {
+			fmt.Printf("\t%s: %s\n", red("deleted"), red(path))
+		}
 	}
-	for _, path := range deletedFiles {
-		fmt.Printf("\t%s: %s\n", red("deleted"), red(path))
-	}
 
-	fmt.Println("\nUntracked files:")
-	for _, path := range untrackedFiles {
-		fmt.Printf("\t%s: %s\n", red("untracked"), red(path))
+	if len(untrackedFiles) > 0 {
+		fmt.Println("\nUntracked files:")
+		for _, path := range untrackedFiles {
+			fmt.Printf("\t%s: %s\n", red("untracked"), red(path))
+		}
 	}
 
 	return nil
