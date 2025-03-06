@@ -47,16 +47,17 @@ func AddToStage(filePath string) error {
 	// Remove existing entry if file is already staged
 	newIndex := removeEntry(index, filePath)
 
-	fileType := "100644"
-	if fileInfo.Mode().Perm()&0111 != 0 {
-		fileType = "100755"
-	}
+	// fileType := "100644"
+	// if fileInfo.Mode().Perm()&0111 != 0 {
+	// 	fileType = "100755"
+	// }
 
+	// TODO: Fix file type when MatchCommitWithDirectory is fixed
 	// Add new entry
 	*newIndex = append(*newIndex, IndexEntry{
 		Path:     filePath,
 		BlobHash: blobHash,
-		Type:     fileType,
+		Type:     "100644",
 	})
 
 	if err := newIndex.SaveIndex(); err != nil {

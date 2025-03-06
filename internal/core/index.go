@@ -84,12 +84,5 @@ func (index *Index) CompareToHead() ([]string, error) {
         }
     }
 
-    // Optionally: check for files in HEAD that are no longer in the index (i.e. deleted files).
-    // for path := range treeFiles {
-    //     if _, exists := index.GetEntry(path); !exists {
-    //         stagedChanges = append(stagedChanges, fmt.Sprintf("deleted: %s", path))
-    //     }
-    // }
-
     return stagedChanges, nil
 }

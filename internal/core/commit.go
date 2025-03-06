@@ -173,7 +173,7 @@ func getCurrentCommit() (string, error) {
 	return string(commitHash), nil
 }
 
-// Helper: Update HEAD (branch reference) to point to the new commit
+// Update HEAD (branch reference) to point to the new commit
 func updateHead(commitHash string) error {
 	headRef, err := os.ReadFile(".gvc/HEAD")
 	if err != nil {
