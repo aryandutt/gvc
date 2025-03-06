@@ -29,8 +29,8 @@ This is a lightweight version control system built in Go, inspired by Git. It pr
 
 1. Clone the repository:
    ```sh
-   git clone <your-repo-url>
-   cd <your-project>
+   git clone https://github.com/aryandutt/gvc.git
+   cd gvc
    ```
 2. Install dependencies:
    ```sh
@@ -38,7 +38,7 @@ This is a lightweight version control system built in Go, inspired by Git. It pr
    ```
 3. Build the project:
    ```sh
-   go build -o vcs
+   go build -o gvc cmd/main.go
    ```
 4. Initialize a repository:
    ```sh
